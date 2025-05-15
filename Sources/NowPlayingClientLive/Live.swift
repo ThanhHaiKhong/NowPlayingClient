@@ -13,23 +13,20 @@ extension NowPlayingClient: DependencyKey {
 		let actor = NowPlayingActor()
 		
 		return NowPlayingClient(
+			initializeAudioSession: { category, mode, options in
+				try await actor.initializeAudioSession(category, mode, options)
+			},
+			setupRemoteCommands: { enabledCommands, handlers in
+				await actor.setupRemoteCommands(enabledCommands, handlers)
+			},
+			interruptionEvents: {
+				await actor.interruptionEvents()
+			},
 			updateStaticInfo: { info in
 				try await actor.updateStaticInfo(info)
 			},
 			updateDynamicInfo: { info in
 				try await actor.updateDynamicInfo(info)
-			},
-			setupRemoteCommands: { handlers in
-				await actor.setupRemoteCommands(handlers)
-			},
-			remoteCommandEvents: {
-				await actor.remoteCommandEvents()
-			},
-			interruptionEvents: {
-				await actor.interruptionEvents()
-			},
-			initializeAudioSession: { category, mode, options in
-				try await actor.initializeAudioSession(category, mode, options)
 			},
 			reset: {
 				await actor.reset()
