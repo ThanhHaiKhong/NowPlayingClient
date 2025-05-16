@@ -28,9 +28,10 @@ extension NowPlayingDelegate {
 		}
 	}
 	
-	func setupRemoteCommands(_ enabledCommands: Set<NowPlayingClient.RemoteCommand>, _ handlers: NowPlayingClient.RemoteCommandHandlers) async {
+	func setupRemoteCommands(_ handlers: NowPlayingClient.RemoteCommandHandlers) async {
 		await MainActor.run {
 			invalidAllRemoteCommands()
+			let enabledCommands = handlers.enabledCommands
 			
 			for command in enabledCommands {
 				configure(command: command, handlers: handlers)
@@ -107,7 +108,7 @@ extension NowPlayingDelegate {
 				}
 			}
 			
-			try AVAudioSession.sharedInstance().setActive(true)
+//			try AVAudioSession.sharedInstance().setActive(true)
 			
 			MPNowPlayingInfoCenter.default().nowPlayingInfo = state.value.toDictionary()
 		}
@@ -125,7 +126,7 @@ extension NowPlayingDelegate {
 				metadata.playbackRate = info.playbackRate
 			}
 			
-			try AVAudioSession.sharedInstance().setActive(true)
+//			try AVAudioSession.sharedInstance().setActive(true)
 			
 			MPNowPlayingInfoCenter.default().nowPlayingInfo = state.value.toDictionary()
 		}

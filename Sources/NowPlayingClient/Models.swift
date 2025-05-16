@@ -24,6 +24,21 @@ extension NowPlayingClient {
 		public static let empty = StaticNowPlayingInfo(
 			title: nil, artist: nil, album: nil, artwork: nil, duration: 0, mediaType: .audio
 		)
+		
+		public init(
+			title: String? = nil,
+			artist: String? = nil,
+			album: String? = nil,
+			artwork: UIImage? = nil,
+			duration: TimeInterval = 0,
+			mediaType: MPNowPlayingInfoMediaType = .audio) {
+			self.title = title
+			self.artist = artist
+			self.album = album
+			self.artwork = artwork
+			self.duration = duration
+			self.mediaType = mediaType
+		}
 	}
 	
 	public struct DynamicNowPlayingInfo: Sendable, Equatable {
@@ -31,6 +46,13 @@ extension NowPlayingClient {
 		public var playbackRate: Float
 		
 		public static let empty = DynamicNowPlayingInfo(elapsedTime: 0, playbackRate: 0.0)
+		
+		public init(
+			elapsedTime: TimeInterval = 0,
+			playbackRate: Float = 0.0) {
+			self.elapsedTime = elapsedTime
+			self.playbackRate = playbackRate
+		}
 	}
 	
 	// MARK: - RemoteCommand
@@ -67,6 +89,10 @@ extension NowPlayingClient {
 		}
 		
 		private let handlers: [RemoteCommand: Handler]
+		
+		public var enabledCommands: Set<RemoteCommand> {
+			Set(handlers.keys)
+		}
 		
 		public init(handlers: [RemoteCommand: Handler] = [:]) {
 			self.handlers = handlers

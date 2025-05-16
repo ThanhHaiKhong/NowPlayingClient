@@ -16,8 +16,8 @@ extension NowPlayingClient: DependencyKey {
 			initializeAudioSession: { category, mode, options in
 				try await actor.initializeAudioSession(category, mode, options)
 			},
-			setupRemoteCommands: { enabledCommands, handlers in
-				await actor.setupRemoteCommands(enabledCommands, handlers)
+			setupRemoteCommands: { handlers in
+				await actor.setupRemoteCommands(handlers)
 			},
 			interruptionEvents: {
 				await actor.interruptionEvents()

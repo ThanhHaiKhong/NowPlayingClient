@@ -20,8 +20,8 @@ actor NowPlayingActor {
 		try await delegate.updateDynamicInfo(info)
 	}
 	
-	func setupRemoteCommands(_ enabledCommands: Set<NowPlayingClient.RemoteCommand>, _ handlers: NowPlayingClient.RemoteCommandHandlers) async {
-		await delegate.setupRemoteCommands(enabledCommands, handlers)
+	func setupRemoteCommands(_ handlers: NowPlayingClient.RemoteCommandHandlers) async {
+		await delegate.setupRemoteCommands(handlers)
 	}
 	
 	func interruptionEvents() -> AsyncStream<NowPlayingClient.InterruptionEvent> {
