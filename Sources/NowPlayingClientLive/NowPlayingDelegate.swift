@@ -138,8 +138,6 @@ extension NowPlayingDelegate {
 				}
 			}
 			
-//			try AVAudioSession.sharedInstance().setActive(true)
-			
 			MPNowPlayingInfoCenter.default().nowPlayingInfo = state.value.toDictionary()
 		}
 	}
@@ -155,8 +153,6 @@ extension NowPlayingDelegate {
 				metadata.elapsedTime = info.elapsedTime
 				metadata.playbackRate = info.playbackRate
 			}
-			
-//			try AVAudioSession.sharedInstance().setActive(true)
 			
 			MPNowPlayingInfoCenter.default().nowPlayingInfo = state.value.toDictionary()
 		}
@@ -412,7 +408,7 @@ extension NowPlayingDelegate {
 			return .skipBackward(interval: Float(event.interval))
 			
 		case (.changePlaybackPosition, let event as MPChangePlaybackPositionCommandEvent):
-			return .changePlaybackPosition(position: Float(event.positionTime))
+			return .changePlaybackPosition(to: Float(event.positionTime))
 			
 		case (.rating, let event as MPRatingCommandEvent):
 			return .rating(value: event.rating)

@@ -132,7 +132,7 @@ extension NowPlayingClient {
 		case previousTrack
 		case skipForward(interval: Float)
 		case skipBackward(interval: Float)
-		case changePlaybackPosition(position: Float)
+		case changePlaybackPosition(to: Float)
 		case rating(value: Float)
 		case like(isNegative: Bool)
 		case dislike(isNegative: Bool)
