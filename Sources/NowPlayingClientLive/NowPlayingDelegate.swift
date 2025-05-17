@@ -45,6 +45,36 @@ extension NowPlayingDelegate {
 		}
 	}
 	
+	func remoteCommandEvents(_ enabledCommands: Set<NowPlayingClient.RemoteCommand>) -> AsyncStream<NowPlayingClient.RemoteCommandEvent> {
+		@Sendable func invalidRemoteCommands() {
+			for command in enabledCommands {
+				let remoteCommand = command.toMPRemoteCommand()
+				remoteCommand.isEnabled = false
+				remoteCommand.removeTarget(nil)
+			}
+		}
+		
+		return AsyncStream { continuation in
+			invalidRemoteCommands()
+			
+			for command in enabledCommands {
+				let remoteCommand = command.toMPRemoteCommand()
+				remoteCommand.isEnabled = true
+				remoteCommand.addTarget { rawEvent in
+					guard let event = self.toRemoteCommandEvent(command, rawEvent) else {
+						return .noSuchContent
+					}
+					continuation.yield(event)
+					return .success
+				}
+			}
+			
+			continuation.onTermination = { _ in
+				invalidRemoteCommands()
+			}
+		}
+	}
+	
 	func interruptionEvents() -> AsyncStream<NowPlayingClient.InterruptionEvent> {
 		AsyncStream { continuation in
 			let observer = NotificationCenter.default.addObserver(
@@ -242,7 +272,162 @@ extension NowPlayingDelegate {
 					return action(event.interval)
 				}
 				return .noSuchContent
+				
+			case let .asyncAction(asyncAction):
+				var result: MPRemoteCommandHandlerStatus = .noSuchContent
+				let semaphore = DispatchSemaphore(value: 0)
+				Task {
+					result = try await asyncAction()
+					semaphore.signal()
+				}
+				semaphore.wait()
+				return result
+				
+			case let .asyncBoolAction(asyncAction):
+				var result: MPRemoteCommandHandlerStatus = .noSuchContent
+				let semaphore = DispatchSemaphore(value: 0)
+				
+				if let event = rawEvent as? MPFeedbackCommandEvent {
+					let isNegative = event.isNegative
+					Task {
+						result = try await asyncAction(isNegative)
+						semaphore.signal()
+					}
+					semaphore.wait()
+				}
+				
+				return result
+				
+			case let .asyncIntAction(asyncAction):
+				var result: MPRemoteCommandHandlerStatus = .noSuchContent
+				let semaphore = DispatchSemaphore(value: 0)
+				
+				if let event = rawEvent as? MPChangeRepeatModeCommandEvent {
+					let repeatType = event.repeatType.rawValue
+					Task {
+//						result = try await asyncAction(repeatType)
+						semaphore.signal()
+					}
+					semaphore.wait()
+				}
+				
+				if let event = rawEvent as? MPChangeShuffleModeCommandEvent {
+					let shuffleType = event.shuffleType.rawValue
+					Task {
+						result = try await asyncAction(shuffleType)
+						semaphore.signal()
+					}
+					semaphore.wait()
+				}
+				
+				return result
+				
+			case let .asyncFloatAction(asyncAction):
+				var result: MPRemoteCommandHandlerStatus = .noSuchContent
+				let semaphore = DispatchSemaphore(value: 0)
+				
+				if let event = rawEvent as? MPChangePlaybackRateCommandEvent {
+					let playbackRate = event.playbackRate
+					Task {
+//						result = try await asyncAction(playbackRate)
+						semaphore.signal()
+					}
+					semaphore.wait()
+				}
+				
+				if let event = rawEvent as? MPRatingCommandEvent {
+					let rating = event.rating
+					Task {
+						result = try await asyncAction(rating)
+						semaphore.signal()
+					}
+					semaphore.wait()
+				}
+				
+				return result
+				
+			case let .asyncTimeIntervalAction(asyncAction):
+				var result: MPRemoteCommandHandlerStatus = .noSuchContent
+				let semaphore = DispatchSemaphore(value: 0)
+				
+				if let event = rawEvent as? MPChangePlaybackPositionCommandEvent {
+					let positionTime = event.positionTime
+					Task {
+//						result = try await asyncAction(positionTime)
+						semaphore.signal()
+					}
+					semaphore.wait()
+				}
+				
+				if let event = rawEvent as? MPSkipIntervalCommandEvent {
+					let interval = event.interval
+					Task {
+						result = try await asyncAction(interval)
+						semaphore.signal()
+					}
+					semaphore.wait()
+				}
+				
+				return result
 			}
+		}
+	}
+	
+	private func toRemoteCommandEvent(_ remoteCommand: NowPlayingClient.RemoteCommand, _ event: MPRemoteCommandEvent) -> NowPlayingClient.RemoteCommandEvent? {
+		switch (remoteCommand, event) {
+		case (.play, _):
+			return .play
+			
+		case (.pause, _):
+			return .pause
+			
+		case (.stop, _):
+			return .stop
+			
+		case (.togglePlayPause, _):
+			return .togglePlayPause
+			
+		case (.changeLanguageOption, _):
+			return .changeLanguageOption
+			
+		case (.changePlaybackRate, let event as MPChangePlaybackRateCommandEvent):
+			return .changePlaybackRate(rate: event.playbackRate)
+			
+		case (.changeRepeatMode, let event as MPChangeRepeatModeCommandEvent):
+			return .changeRepeatMode(repeatType: event.repeatType.rawValue)
+			
+		case (.changeShuffleMode, let event as MPChangeShuffleModeCommandEvent):
+			return .changeShuffleMode(shuffleType: event.shuffleType.rawValue)
+			
+		case (.nextTrack, _):
+			return .nextTrack
+			
+		case (.previousTrack, _):
+			return .previousTrack
+			
+		case (.skipForward, let event as MPSkipIntervalCommandEvent):
+			return .skipForward(interval: Float(event.interval))
+			
+		case (.skipBackward, let event as MPSkipIntervalCommandEvent):
+			return .skipBackward(interval: Float(event.interval))
+			
+		case (.changePlaybackPosition, let event as MPChangePlaybackPositionCommandEvent):
+			return .changePlaybackPosition(position: Float(event.positionTime))
+			
+		case (.rating, let event as MPRatingCommandEvent):
+			return .rating(value: event.rating)
+		
+		case (.like, let event as MPFeedbackCommandEvent):
+			return .like(isNegative: event.isNegative)
+			
+		case (.dislike, let event as MPFeedbackCommandEvent):
+			return .dislike(isNegative: event.isNegative)
+			
+		case (.bookmark, let event as MPFeedbackCommandEvent):
+			return .bookmark(isNegative: event.isNegative)
+			
+		default:
+			return nil
 		}
 	}
 }

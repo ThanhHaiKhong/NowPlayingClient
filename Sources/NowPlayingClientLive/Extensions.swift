@@ -26,13 +26,3 @@ extension MPRemoteCommandCenter: @unchecked @retroactive Sendable {
 extension MPMediaItemArtwork: @unchecked @retroactive Sendable {
 	
 }
-
-extension AVAudioSession {
-	func ensureActive() throws {
-		do {
-			try setActive(true)
-		} catch {
-			throw NowPlayingClient.NowPlayingError.audioSessionInactive
-		}
-	}
-}

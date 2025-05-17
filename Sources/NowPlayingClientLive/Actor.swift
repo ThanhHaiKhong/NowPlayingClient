@@ -12,24 +12,28 @@ actor NowPlayingActor {
 	
 	private let delegate = NowPlayingDelegate()
 	
-	func updateStaticInfo(_ info: NowPlayingClient.StaticNowPlayingInfo) async throws {
-		try await delegate.updateStaticInfo(info)
-	}
-	
-	func updateDynamicInfo(_ info: NowPlayingClient.DynamicNowPlayingInfo) async throws {
-		try await delegate.updateDynamicInfo(info)
+	func initializeAudioSession(_ category: AVAudioSession.Category, _ mode: AVAudioSession.Mode, _ options: AVAudioSession.CategoryOptions) async throws {
+		try await delegate.initializeAudioSession(category, mode, options)
 	}
 	
 	func setupRemoteCommands(_ handlers: NowPlayingClient.RemoteCommandHandlers) async {
 		await delegate.setupRemoteCommands(handlers)
+	}
+
+	func remoteCommandEvents(_ enabledCommands: Set<NowPlayingClient.RemoteCommand>) -> AsyncStream<NowPlayingClient.RemoteCommandEvent> {
+		delegate.remoteCommandEvents(enabledCommands)
 	}
 	
 	func interruptionEvents() -> AsyncStream<NowPlayingClient.InterruptionEvent> {
 		delegate.interruptionEvents()
 	}
 	
-	func initializeAudioSession(_ category: AVAudioSession.Category, _ mode: AVAudioSession.Mode, _ options: AVAudioSession.CategoryOptions) async throws {
-		try await delegate.initializeAudioSession(category, mode, options)
+	func updateStaticInfo(_ info: NowPlayingClient.StaticNowPlayingInfo) async throws {
+		try await delegate.updateStaticInfo(info)
+	}
+	
+	func updateDynamicInfo(_ info: NowPlayingClient.DynamicNowPlayingInfo) async throws {
+		try await delegate.updateDynamicInfo(info)
 	}
 	
 	func reset() async {

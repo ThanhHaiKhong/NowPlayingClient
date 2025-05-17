@@ -19,6 +19,9 @@ extension NowPlayingClient: DependencyKey {
 			setupRemoteCommands: { handlers in
 				await actor.setupRemoteCommands(handlers)
 			},
+			remoteCommandEvents: { enabledCommands in
+				await actor.remoteCommandEvents(enabledCommands)
+			},
 			interruptionEvents: {
 				await actor.interruptionEvents()
 			},

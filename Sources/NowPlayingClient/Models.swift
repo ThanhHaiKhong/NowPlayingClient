@@ -86,6 +86,12 @@ extension NowPlayingClient {
 			case intAction(@Sendable (Int) -> MPRemoteCommandHandlerStatus)
 			case floatAction(@Sendable (Float) -> MPRemoteCommandHandlerStatus)
 			case timeIntervalAction(@Sendable (TimeInterval) -> MPRemoteCommandHandlerStatus)
+			
+			case asyncAction(@Sendable () async throws -> MPRemoteCommandHandlerStatus)
+			case asyncBoolAction(@Sendable (Bool) async throws -> MPRemoteCommandHandlerStatus)
+			case asyncIntAction(@Sendable (Int) async throws -> MPRemoteCommandHandlerStatus)
+			case asyncFloatAction(@Sendable (Float) async throws -> MPRemoteCommandHandlerStatus)
+			case asyncTimeIntervalAction(@Sendable (TimeInterval) async throws -> MPRemoteCommandHandlerStatus)
 		}
 		
 		private let handlers: [RemoteCommand: Handler]
@@ -111,6 +117,28 @@ extension NowPlayingClient {
 		}
 	}
 	
+	// MARK: - RemoteCommandEvent
+	
+	public enum RemoteCommandEvent: Sendable, Equatable {
+		case play
+		case pause
+		case stop
+		case togglePlayPause
+		case changeLanguageOption
+		case changePlaybackRate(rate: Float)
+		case changeRepeatMode(repeatType: Int)
+		case changeShuffleMode(shuffleType: Int)
+		case nextTrack
+		case previousTrack
+		case skipForward(interval: Float)
+		case skipBackward(interval: Float)
+		case changePlaybackPosition(position: Float)
+		case rating(value: Float)
+		case like(isNegative: Bool)
+		case dislike(isNegative: Bool)
+		case bookmark(isNegative: Bool)
+	}
+	
 	// MARK: - InterruptionEvent
 	
 	public enum InterruptionEvent: Sendable, Equatable {
@@ -133,55 +161,67 @@ extension NowPlayingClient.RemoteCommand {
 		switch self {
 		case .play:
 			return commandCenter.playCommand
+			
 		case .pause:
 			return commandCenter.pauseCommand
+			
 		case .stop:
 			return commandCenter.stopCommand
+			
 		case .togglePlayPause:
 			return commandCenter.togglePlayPauseCommand
+			
 		case let .changeLanguageOption(isEnabled):
-			if isEnabled {
-				return commandCenter.enableLanguageOptionCommand
-			} else {
-				return commandCenter.disableLanguageOptionCommand
-			}
+			return isEnabled ? commandCenter.enableLanguageOptionCommand : commandCenter.disableLanguageOptionCommand
+			
 		case let .changePlaybackRate(rates):
 			let playbackRateCommand = commandCenter.changePlaybackRateCommand
 			playbackRateCommand.supportedPlaybackRates = rates.map { NSNumber(value: $0) }
 			return playbackRateCommand
+			
 		case .changeRepeatMode:
 			return commandCenter.changeRepeatModeCommand
+			
 		case .changeShuffleMode:
 			return commandCenter.changeShuffleModeCommand
+			
 		case .nextTrack:
 			return commandCenter.nextTrackCommand
+			
 		case .previousTrack:
 			return commandCenter.previousTrackCommand
+			
 		case let .skipForward(intervals):
 			let skipForwardCommand = commandCenter.skipForwardCommand
 			skipForwardCommand.preferredIntervals = intervals.map { NSNumber(value: $0) }
 			return skipForwardCommand
+			
 		case let .skipBackward(intervals):
 			let skipBackwardCommand = commandCenter.skipBackwardCommand
 			skipBackwardCommand.preferredIntervals = intervals.map { NSNumber(value: $0) }
 			return skipBackwardCommand
+			
 		case .changePlaybackPosition:
 			return commandCenter.changePlaybackPositionCommand
+			
 		case let .rating(min, max):
 			let ratingCommand = commandCenter.ratingCommand
 			ratingCommand.minimumRating = min
 			ratingCommand.maximumRating = max
 			return ratingCommand
+			
 		case let .like(isActive, title):
 			let likeCommand = commandCenter.likeCommand
 			likeCommand.isActive = isActive
 			likeCommand.localizedTitle = title
 			return likeCommand
+			
 		case let .dislike(isActive, title):
 			let dislikeCommand = commandCenter.dislikeCommand
 			dislikeCommand.isActive = isActive
 			dislikeCommand.localizedTitle = title
 			return dislikeCommand
+			
 		case let .bookmark(isActive, title):
 			let bookmarkCommand = commandCenter.bookmarkCommand
 			bookmarkCommand.isActive = isActive
